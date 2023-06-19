@@ -1,5 +1,9 @@
 {
     "files.associations": {
-        "cstdlib": "c"
+        "cstdlib": "c",
+        "stat.h": "c",
+        "param.h": "c",
+        "user.h": "c",
+        "sysinfo.h": "c"
     }
 }

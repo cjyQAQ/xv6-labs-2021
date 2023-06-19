@@ -16,8 +16,7 @@ int parse_int(const char *arg)
     return atoi(arg);
 }
 
-int
-main(int argc, char *argv[])
+int main(int argc, char *argv[])
 {
   if(argc < 2){
     printf("input one argument only\n");
@@ -32,4 +31,5 @@ main(int argc, char *argv[])
     }
   sleep(time);
   exit(0);
+
 }
