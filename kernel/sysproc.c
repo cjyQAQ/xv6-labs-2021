@@ -81,7 +81,14 @@ int
 sys_pgaccess(void)
 {
   // lab pgtbl: your code here.
-  return 0;
+  uint64 startaddr;
+  int pagenum;
+  uint64 useraddr;
+  if((argaddr(0,&startaddr)<0)| (argint(1,&pagenum)<0) | (argaddr(2,&useraddr)<0))
+  {
+    return -1;
+  }
+  return pgaccess((void*)startaddr,pagenum,(void *)useraddr);
 }
 #endif
 
@@ -107,3 +114,5 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+
