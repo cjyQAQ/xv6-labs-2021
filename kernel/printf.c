@@ -132,3 +132,39 @@ printfinit(void)
   initlock(&pr.lock, "pr");
   pr.locking = 1;
 }
+
+//递归
+void trave(uint64 fp,uint64 up,uint64 down)
+{
+
+  if(fp >= up || fp <= down)
+  {
+    return;
+  }
+  uint64 ret_addr = *(uint64 *)(fp - 8);
+  printf("%p\n",ret_addr);
+  uint64 new_addr = *(uint64 *)(fp - 16);
+  trave(new_addr,up,down);
+}
+
+void backtrace()
+{
+  printf("backtrace:\n");
+  uint64 fp = r_fp();
+  trave(fp,PGROUNDUP(fp),PGROUNDDOWN(fp));
+  //迭代
+  // if(fp < PGROUNDDOWN(fp) || fp > PGROUNDUP(fp))
+  // {
+  //   printf("backtrace:fp is err\n");
+  //   return ;
+  // }
+  // while (PGROUNDUP(fp) - PGROUNDDOWN(fp) == PGSIZE)
+  // {
+  //     printf("fp is %p PGUP is %p\n ",fp,PGROUNDUP(fp));      
+  //     uint64 ret_addr = *(uint64 *)(fp - 8);
+  //     printf("%p\n",ret_addr);
+  //     fp = *(uint64 *)(fp -16);
+  // }
+  // printf("end fp is %p\n",fp);
+}
+
