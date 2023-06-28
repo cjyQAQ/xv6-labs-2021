@@ -23,11 +23,13 @@ simpletest()
     exit(-1);
   }
 
+  //将申请的空间按照页大小进行初始化。前四个字节写入进程id
   for(char *q = p; q < p + sz; q += 4096){
     *(int*)q = getpid();
   }
 
   int pid = fork();
+
   if(pid < 0){
     printf("fork() failed\n");
     exit(-1);

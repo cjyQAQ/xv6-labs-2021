@@ -21,7 +21,10 @@ struct run {
 struct {
   struct spinlock lock;
   struct run *freelist;
+  int page_refcnt[(PHYSTOP - KERNBASE)/PGSIZE];   //引用计数数组，给每个页分配一个计数
 } kmem;
+
+
 
 void
 kinit()
@@ -52,10 +55,22 @@ kfree(void *pa)
     panic("kfree");
 
   // Fill with junk to catch dangling refs.
+
+  //|| kmem.page_refcnt[((uint64)pa - KERNBASE)/PGSIZE] == 0
+  // printf("kmem.page_refcnt %d ",kmem.page_refcnt[((uint64)pa - KERNBASE) / PGSIZE]);
+  if(kmem.page_refcnt[((uint64)pa - KERNBASE)/PGSIZE] > 1)
+  {
+    decpageref((uint64)pa);
+    return;
+  }
+  if(kmem.page_refcnt[((uint64)pa - KERNBASE)/PGSIZE] == 1)
+  {
+    decpageref((uint64)pa);
+  }
+  // if(kmem.page_refcnt[((uint64)pa - KERNBASE)/PGSIZE] > 1)
   memset(pa, 1, PGSIZE);
 
-  r = (struct run*)pa;
-
+  r = (struct run *)pa;
   acquire(&kmem.lock);
   r->next = kmem.freelist;
   kmem.freelist = r;
@@ -73,10 +88,40 @@ kalloc(void)
   acquire(&kmem.lock);
   r = kmem.freelist;
   if(r)
+  {
     kmem.freelist = r->next;
+    kmem.page_refcnt[((uint64)r - KERNBASE)/PGSIZE] = 1;
+  }
+    
   release(&kmem.lock);
-
   if(r)
+  {
     memset((char*)r, 5, PGSIZE); // fill with junk
+  }
   return (void*)r;
+}
+
+void addpageref(uint64 pa)
+{
+  if(((uint64)pa % PGSIZE) != 0 || (char*)pa < end || (uint64)pa >= PHYSTOP)
+    return ;
+  acquire(&kmem.lock);
+  ++kmem.page_refcnt[(pa - KERNBASE)/PGSIZE];
+  release(&kmem.lock);
+}
+
+void decpageref(uint64 pa)
+{
+  acquire(&kmem.lock);
+  --kmem.page_refcnt[(pa - KERNBASE)/PGSIZE];
+  release(&kmem.lock);
+}
+
+int getpageref(uint64 pa)
+{
+  int cnt = 0;
+  acquire(&kmem.lock);
+  cnt = kmem.page_refcnt[(pa - KERNBASE)/PGSIZE];
+  release(&kmem.lock);
+  return cnt;
 }
